@@ -3,10 +3,15 @@ import { NextResponse } from 'next/server';
 
 export default withAuth(
   function middleware(req) {
-    // Handle paths that require authentication
     const isAuth = !!req.nextauth.token;
     const isAuthPage = req.nextUrl.pathname.startsWith('/auth');
-    const isApiRoute = req.nextUrl.pathname.startsWith('/api');
+    const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth');
+    const isPublicRoute = req.nextUrl.pathname === '/' || isApiAuthRoute;
+
+    // Allow public routes and API auth routes
+    if (isPublicRoute) {
+      return null;
+    }
 
     // Redirect authenticated users away from auth pages
     if (isAuthPage) {
@@ -16,35 +21,38 @@ export default withAuth(
       return null;
     }
 
-    // Allow API routes to handle their own auth
-    if (isApiRoute) {
-      return null;
-    }
-
     // Protect all other routes
     if (!isAuth) {
-      return NextResponse.redirect(new URL('/auth/signin', req.url));
+      let from = req.nextUrl.pathname;
+      if (req.nextUrl.search) {
+        from += req.nextUrl.search;
+      }
+      
+      return NextResponse.redirect(
+        new URL(`/auth/signin?from=${encodeURIComponent(from)}`, req.url)
+      );
     }
 
     return null;
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: () => true // Let the middleware function handle the auth check
     },
   }
 );
 
-// Specify which routes to protect
+// Only protect specific routes
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public directory)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/create',
+    '/profile/:path*',
+    '/notifications',
+    '/onboarding',
+    '/auth/:path*',
+    '/api/posts/:path*',
+    '/api/users/:path*',
+    '/api/notifications/:path*',
+    '/api/search/:path*',
   ],
 };

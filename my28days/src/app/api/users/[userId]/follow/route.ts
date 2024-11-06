@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/user';
-import { createNotification } from '@/lib/notifications';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/data";
 
 export async function POST(
   req: Request,
@@ -10,69 +8,51 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { userId } = params;
-    const currentUserId = session.user.id;
-
-    if (userId === currentUserId) {
+    if (!session?.user) {
       return NextResponse.json(
-        { error: 'Cannot follow yourself' },
-        { status: 400 }
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    await connectDB();
-
-    const userToFollow = await User.findById(userId);
-    const currentUser = await User.findById(currentUserId);
-
-    if (!userToFollow || !currentUser) {
+    const currentUser = db.getUserByEmail(session.user.email!);
+    if (!currentUser) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: "User not found" },
         { status: 404 }
       );
     }
 
-    const isFollowing = currentUser.following.includes(userId);
-
-    if (isFollowing) {
-      // Unfollow
-      currentUser.following = currentUser.following.filter(
-        (id: string) => id.toString() !== userId
+    const targetUser = db.getUserById(params.userId);
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: "Target user not found" },
+        { status: 404 }
       );
-      userToFollow.followers = userToFollow.followers.filter(
-        (id: string) => id.toString() !== currentUserId
-      );
-    } else {
-      // Follow
-      currentUser.following.push(userId);
-      userToFollow.followers.push(currentUserId);
-      
-      // Create notification
-      await createNotification({
-        recipientId: userId,
-        senderId: currentUserId,
-        type: 'follow',
-      });
     }
 
-    await Promise.all([
-      currentUser.save(),
-      userToFollow.save(),
-    ]);
+    // Can't follow yourself
+    if (currentUser._id === targetUser._id) {
+      return NextResponse.json(
+        { error: "Cannot follow yourself" },
+        { status: 400 }
+      );
+    }
 
+    // For demo purposes, just toggle the follow status
+    const isFollowing = currentUser.following.includes(targetUser._id);
+    const updatedFollowing = isFollowing
+      ? currentUser.following.filter(id => id !== targetUser._id)
+      : [...currentUser.following, targetUser._id];
+
+    // Return the updated following status
     return NextResponse.json({
-      isFollowing: !isFollowing,
-      followersCount: userToFollow.followers.length,
-      followingCount: userToFollow.following.length,
+      following: updatedFollowing,
+      isFollowing: !isFollowing
     });
   } catch (error) {
-    console.error('Follow error:', error);
     return NextResponse.json(
-      { error: 'Error processing follow request' },
+      { error: "Failed to update follow status" },
       { status: 500 }
     );
   }

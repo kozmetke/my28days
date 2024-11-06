@@ -1,83 +1,135 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/data';
 import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
-import Post from '@/models/post';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import type { Post, Comment } from '@/types';
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const skip = (page - 1) * limit;
 
-    await connectDB();
+    const allPosts = db.getPosts();
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const posts = allPosts.slice(start, end);
 
-    const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('author', 'name image')
-      .populate({
-        path: 'comments',
-        populate: {
-          path: 'user',
-          select: 'name',
+    // Transform posts to match the expected format
+    const transformedPosts = posts.map(post => {
+      const user = db.getUserById(post.userId);
+      if (!user) {
+        throw new Error(`User not found for post ${post._id}`);
+      }
+
+      const transformedPost: Post = {
+        _id: post._id,
+        content: post.content,
+        author: {
+          _id: user._id,
+          name: user.name,
+          image: user.image || '',
         },
-      });
+        userId: post.userId,
+        images: [],
+        likes: post.likes,
+        comments: post.comments.map(comment => {
+          const commentUser = db.getUserById(comment.userId);
+          if (!commentUser) {
+            throw new Error(`User not found for comment ${comment._id}`);
+          }
+          const transformedComment: Comment = {
+            _id: comment._id,
+            postId: comment.postId,
+            userId: comment.userId,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt,
+            user: {
+              _id: commentUser._id,
+              name: commentUser.name,
+              image: commentUser.image || '',
+            }
+          };
+          return transformedComment;
+        }),
+        category: 'general',
+        isAnonymous: false,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt
+      };
 
-    const totalPosts = await Post.countDocuments();
+      return transformedPost;
+    });
 
     return NextResponse.json({
-      posts,
-      hasMore: skip + posts.length < totalPosts,
+      posts: transformedPosts,
+      hasMore: end < allPosts.length
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching posts:', error);
     return NextResponse.json(
-      { error: 'Error fetching posts' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { content, category, isAnonymous, images } = await req.json();
+    const data = await request.json();
+    const { content } = data;
 
-    if (!content || !category) {
+    if (!content) {
       return NextResponse.json(
-        { error: 'Content and category are required' },
+        { error: 'Content is required' },
         { status: 400 }
       );
     }
 
-    await connectDB();
+    const user = db.getUserByEmail(session.user.email!);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
-    const post = await Post.create({
+    const post: Post = {
+      _id: Math.random().toString(36).substr(2, 9),
+      userId: user._id,
       content,
-      category,
-      isAnonymous,
-      images: images || [],
-      author: session.user.id,
-    });
+      likes: [],
+      comments: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      author: {
+        _id: user._id,
+        name: user.name,
+        image: user.image || '',
+      },
+      category: 'general',
+      isAnonymous: false,
+      images: []
+    };
 
-    await post.populate('author', 'name image');
-
-    return NextResponse.json(post, { status: 201 });
-  } catch (error) {
+    // In a real app, we would save this to the database
+    // For now, we'll just return the created post
+    return NextResponse.json(post);
+  } catch (error: any) {
     console.error('Error creating post:', error);
     return NextResponse.json(
-      { error: 'Error creating post' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

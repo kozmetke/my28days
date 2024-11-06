@@ -2,58 +2,59 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  image: string;
+  image?: string;
   bio?: string;
   followers: string[];
   following: string[];
   medicalInfo?: {
-    diagnosisDate: string;
-    symptoms: string[];
-    treatments: string[];
+    lastPeriod?: string;
+    diagnosisDate?: string;
+    symptoms?: string[];
+    medications?: string[];
+    treatments?: string[];
   };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Author {
+  _id: string;
+  name: string;
+  image: string;
 }
 
 export interface Comment {
   _id: string;
+  postId: string;
+  userId: string;
   content: string;
-  user: {
-    _id: string;
-    name: string;
-    image: string;
-  };
   createdAt: string;
+  updatedAt: string;
+  user: Author; // Changed from optional User to required Author
 }
 
 export interface Post {
   _id: string;
   content: string;
-  author: {
-    _id: string;
-    name: string;
-    image: string;
-  };
+  author: Author;
+  userId: string;
   images?: string[];
   likes: string[];
   comments: Comment[];
   category: string;
   isAnonymous: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Notification {
   _id: string;
+  userId: string;
   type: 'like' | 'comment' | 'follow';
-  sender: {
-    _id: string;
-    name: string;
-    image: string;
-  };
-  recipient: string;
-  post?: {
-    _id: string;
-    content: string;
-  };
-  comment?: string;
+  fromUserId: string;
+  postId?: string;
   read: boolean;
   createdAt: string;
+  fromUser?: Author;
+  post?: Post;
 }

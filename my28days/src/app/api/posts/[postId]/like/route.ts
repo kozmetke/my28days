@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
-import Post from '@/models/post';
-import { createNotification } from '@/lib/notifications';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/data";
 
 export async function POST(
   req: Request,
@@ -10,43 +8,40 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const { postId } = params;
-    const userId = session.user.id;
+    const user = db.getUserByEmail(session.user.email!);
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
 
-    await connectDB();
-
-    const post = await Post.findById(postId);
+    const post = db.getPostById(params.postId);
     if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Post not found" },
+        { status: 404 }
+      );
     }
 
-    const likeIndex = post.likes.indexOf(userId);
-    if (likeIndex > -1) {
-      // Unlike
-      post.likes.splice(likeIndex, 1);
-    } else {
-      // Like
-      post.likes.push(userId);
-      // Create notification for the post author
-      await createNotification({
-        recipientId: post.author.toString(),
-        senderId: userId,
-        type: 'like',
-        postId: postId,
-      });
-    }
+    // For demo purposes, just toggle the like status
+    const isLiked = post.likes.includes(user._id);
+    const updatedLikes = isLiked
+      ? post.likes.filter(id => id !== user._id)
+      : [...post.likes, user._id];
 
-    await post.save();
-
-    return NextResponse.json({ likes: post.likes });
+    // Return the updated likes array
+    return NextResponse.json({ likes: updatedLikes });
   } catch (error) {
-    console.error('Error handling like:', error);
     return NextResponse.json(
-      { error: 'Error handling like' },
+      { error: "Failed to update like" },
       { status: 500 }
     );
   }

@@ -1,75 +1,59 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
-import Notification from '@/models/notification';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/data";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const skip = (page - 1) * limit;
+    const user = db.getUserByEmail(session.user.email!);
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
 
-    await connectDB();
-
-    const notifications = await Notification.find({
-      recipient: session.user.id,
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('sender', 'name image')
-      .populate('post', 'content');
-
-    const totalNotifications = await Notification.countDocuments({
-      recipient: session.user.id,
-    });
-
-    // Mark fetched notifications as read
-    await Notification.updateMany(
-      {
-        recipient: session.user.id,
-        read: false,
-      },
-      { $set: { read: true } }
-    );
-
-    return NextResponse.json({
-      notifications,
-      hasMore: skip + notifications.length < totalNotifications,
-    });
+    const notifications = db.getNotifications(user._id);
+    return NextResponse.json(notifications);
   } catch (error) {
-    console.error('Error fetching notifications:', error);
     return NextResponse.json(
-      { error: 'Error fetching notifications' },
+      { error: "Failed to fetch notifications" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(req: Request) {
+export async function PUT(req: Request) {
   try {
     const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    await connectDB();
+    const user = db.getUserByEmail(session.user.email!);
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
 
-    await Notification.deleteMany({
-      recipient: session.user.id,
-    });
-
-    return NextResponse.json({ message: 'Notifications cleared' });
+    // For demo purposes, just return success
+    // In a real app, this would mark notifications as read
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error clearing notifications:', error);
     return NextResponse.json(
-      { error: 'Error clearing notifications' },
+      { error: "Failed to update notifications" },
       { status: 500 }
     );
   }

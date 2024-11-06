@@ -1,38 +1,27 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/user';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/data";
 
 export async function GET(
   req: Request,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { userId } = params;
-
-    await connectDB();
-
-    const user = await User.findById(userId)
-      .select('-password')
-      .lean();
-
+    const user = db.getUserById(params.userId);
+    
     if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: "User not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(user);
+    // Return user without sensitive information
+    const { email, ...safeUser } = user;
+    return NextResponse.json(safeUser);
   } catch (error) {
-    console.error('Error fetching user:', error);
     return NextResponse.json(
-      { error: 'Error fetching user' },
+      { error: "Failed to fetch user" },
       { status: 500 }
     );
   }
@@ -44,40 +33,35 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { userId } = params;
-    if (session.user.id !== userId) {
+    if (!session?.user) {
       return NextResponse.json(
-        { error: 'Cannot update other users' },
-        { status: 403 }
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    const updateData = await req.json();
-
-    await connectDB();
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true }
-    ).select('-password');
-
-    if (!user) {
+    const currentUser = db.getUserByEmail(session.user.email!);
+    if (!currentUser || currentUser._id !== params.userId) {
       return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    return NextResponse.json(user);
+    const data = await req.json();
+    const { name, bio, medicalInfo } = data;
+
+    // For demo purposes, just return the updated data
+    // In a real app, this would update the user in the database
+    return NextResponse.json({
+      ...currentUser,
+      name: name || currentUser.name,
+      bio: bio || currentUser.bio,
+      medicalInfo: medicalInfo || currentUser.medicalInfo
+    });
   } catch (error) {
-    console.error('Error updating user:', error);
     return NextResponse.json(
-      { error: 'Error updating user' },
+      { error: "Failed to update user" },
       { status: 500 }
     );
   }

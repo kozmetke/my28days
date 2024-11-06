@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignIn() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState('sarah@example.com'); // Pre-fill with demo user
+  const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,19 +19,27 @@ export default function SignIn() {
     setError('');
 
     try {
+      const callbackUrl = searchParams?.get('from') || '/';
+      console.log('Attempting sign in with:', { email, callbackUrl }); // Debug log
+
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
+        callbackUrl,
       });
+
+      console.log('Sign in result:', result); // Debug log
 
       if (result?.error) {
         setError(result.error);
+      } else if (result?.url) {
+        router.push(result.url);
       } else {
-        router.push('/');
-        router.refresh();
+        router.push(callbackUrl);
       }
     } catch (error) {
+      console.error('Sign in error:', error); // Debug log
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -42,14 +50,10 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
-          <Image
-            src="/logo.png"
-            alt="My28Days Logo"
-            width={80}
-            height={80}
-            className="mx-auto"
-          />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome back</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Demo Account: sarah@example.com / password123
+          </p>
           <p className="mt-2 text-sm text-gray-600">
             New to My28Days?{' '}
             <Link href="/auth/signup" className="text-pink-600 hover:text-pink-500">

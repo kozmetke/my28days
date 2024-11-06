@@ -25,7 +25,7 @@ export default function Home() {
     if (status === 'authenticated') {
       fetchPosts();
     }
-  }, [status]);
+  }, [status, page]); // Added page dependency
 
   const fetchPosts = async () => {
     try {
@@ -56,7 +56,6 @@ export default function Home() {
     ) {
       if (hasMore && !loading) {
         setPage(prev => prev + 1);
-        fetchPosts();
       }
     }
   };
@@ -83,13 +82,13 @@ export default function Home() {
         </p>
       </div>
 
-      {posts.length === 0 && !loading ? (
+      {posts?.length === 0 && !loading ? (
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
           <p className="text-gray-600">No posts yet. Be the first to share!</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => (
+          {posts?.map((post) => (
             <PostCard
               key={post._id}
               post={post}
