@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { AiOutlineLoading3Quarters, AiOutlineCalendar } from 'react-icons/ai';
+import { AiOutlineLoading3Quarters, AiOutlineCalendar, AiOutlineWallet } from 'react-icons/ai';
 import PostCard from '@/components/posts/PostCard';
 import { format } from 'date-fns';
 import type { User, Post } from '@/types';
@@ -197,6 +197,18 @@ export default function Profile({ params }: { params: { userId: string } }) {
             </div>
           ) : (
             <div className="p-4">
+              {user.flowWallet && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-neutral-900 mb-2">Flow Wallet</h3>
+                  <div className="flex items-center space-x-2 bg-neutral-50 p-3 rounded-lg">
+                    <AiOutlineWallet className="text-neutral-600" />
+                    <span className="text-sm font-mono text-neutral-600 break-all">
+                      {user.flowWallet.address}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               {user.medicalInfo && (
                 <div className="space-y-6">
                   {user.medicalInfo.symptoms && user.medicalInfo.symptoms.length > 0 && (

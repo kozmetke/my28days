@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/user';
+import { createFlowAccount } from '@/lib/flow';
 
 export async function POST(req: Request) {
   try {
@@ -28,18 +29,30 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
+    // Create Flow wallet
+    const flowAccount = await createFlowAccount();
+
+    // Create new user with Flow wallet
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      flowWallet: {
+        address: flowAccount.address,
+        privateKey: flowAccount.privateKey,
+        publicKey: flowAccount.publicKey
+      }
     });
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user.toObject();
+    // Remove sensitive data from response
+    const { password: _, flowWallet: { privateKey: __, ...safeWallet }, ...safeUser } = user.toObject();
+    const userResponse = {
+      ...safeUser,
+      flowWallet: safeWallet
+    };
 
     return NextResponse.json(
-      { message: 'User created successfully', user: userWithoutPassword },
+      { message: 'User created successfully', user: userResponse },
       { status: 201 }
     );
   } catch (error) {

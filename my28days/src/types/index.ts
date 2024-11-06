@@ -6,6 +6,10 @@ export interface User {
   bio?: string;
   followers: string[];
   following: string[];
+  flowWallet?: {
+    address: string;
+    publicKey: string;
+  };
   medicalInfo?: {
     lastPeriod?: string;
     diagnosisDate?: string;

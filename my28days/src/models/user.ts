@@ -22,6 +22,20 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  flowWallet: {
+    address: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    privateKey: {
+      type: String,
+      select: false, // This ensures the private key is not returned in queries
+    },
+    publicKey: {
+      type: String,
+    }
+  },
   followers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
