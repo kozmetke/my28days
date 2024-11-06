@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 
 export default function Onboarding() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ export default function Onboarding() {
         body: JSON.stringify({
           userId: session.user.id,
           medicalInfo: {
-            diagnosisDate: formData.diagnosisDate,
+            diagnosisDate: formData.diagnosisDate || new Date().toISOString(),
             symptoms: formData.symptoms,
             treatments: formData.treatments,
           },
@@ -78,13 +78,20 @@ export default function Onboarding() {
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error(data.error || 'Failed to update profile');
       }
 
+      // Update the session with the new user data
+      await update();
+      
+      // Redirect to home page
       router.push('/');
     } catch (error) {
       console.error('Error updating profile:', error);
+      alert('Failed to complete setup. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -100,11 +107,11 @@ export default function Onboarding() {
               type="date"
               value={formData.diagnosisDate}
               onChange={(e) => setFormData(prev => ({ ...prev, diagnosisDate: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
             <button
               onClick={() => setStep(2)}
-              className="w-full bg-pink-600 text-white py-2 rounded-md hover:bg-pink-700"
+              className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition-colors"
             >
               Next
             </button>
@@ -120,10 +127,10 @@ export default function Onboarding() {
                 <button
                   key={symptom}
                   onClick={() => handleSymptomToggle(symptom)}
-                  className={`p-3 rounded-md border ${
+                  className={`p-3 rounded-lg border ${
                     formData.symptoms.includes(symptom)
-                      ? 'bg-pink-100 border-pink-500 text-pink-700'
-                      : 'border-gray-300 hover:border-pink-500'
+                      ? 'bg-pink-50 border-pink-500 text-pink-700'
+                      : 'border-neutral-200 hover:border-pink-500 transition-colors'
                   }`}
                 >
                   {symptom}
@@ -132,7 +139,7 @@ export default function Onboarding() {
             </div>
             <button
               onClick={() => setStep(3)}
-              className="w-full bg-pink-600 text-white py-2 rounded-md hover:bg-pink-700"
+              className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition-colors"
             >
               Next
             </button>
@@ -148,10 +155,10 @@ export default function Onboarding() {
                 <button
                   key={treatment}
                   onClick={() => handleTreatmentToggle(treatment)}
-                  className={`p-3 rounded-md border ${
+                  className={`p-3 rounded-lg border ${
                     formData.treatments.includes(treatment)
-                      ? 'bg-pink-100 border-pink-500 text-pink-700'
-                      : 'border-gray-300 hover:border-pink-500'
+                      ? 'bg-pink-50 border-pink-500 text-pink-700'
+                      : 'border-neutral-200 hover:border-pink-500 transition-colors'
                   }`}
                 >
                   {treatment}
@@ -160,7 +167,7 @@ export default function Onboarding() {
             </div>
             <button
               onClick={() => setStep(4)}
-              className="w-full bg-pink-600 text-white py-2 rounded-md hover:bg-pink-700"
+              className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition-colors"
             >
               Next
             </button>
@@ -175,12 +182,12 @@ export default function Onboarding() {
               value={formData.bio}
               onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
               placeholder="Share your story and what you hope to find in this community..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md h-32"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 h-32"
             />
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-pink-600 text-white py-2 rounded-md hover:bg-pink-700 disabled:opacity-50"
+              className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50"
             >
               {loading ? 'Completing Setup...' : 'Complete Setup'}
             </button>
@@ -193,7 +200,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-2xl mx-auto pt-12 px-4">
         <div className="text-center mb-8">
           <Image
@@ -203,18 +210,18 @@ export default function Onboarding() {
             height={60}
             className="mx-auto"
           />
-          <h1 className="mt-4 text-3xl font-bold text-gray-900">Welcome to My28Days</h1>
-          <p className="mt-2 text-gray-600">Let's personalize your experience</p>
+          <h1 className="mt-4 text-3xl font-bold text-neutral-900">Welcome to My28Days</h1>
+          <p className="mt-2 text-neutral-600">Let's personalize your experience</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="mb-6">
             <div className="flex justify-between items-center">
               {[1, 2, 3, 4].map((stepNumber) => (
                 <div
                   key={stepNumber}
                   className={`w-1/4 h-2 rounded-full ${
-                    stepNumber <= step ? 'bg-pink-500' : 'bg-gray-200'
+                    stepNumber <= step ? 'bg-pink-500' : 'bg-neutral-200'
                   }`}
                 />
               ))}

@@ -33,28 +33,36 @@ export default function Notifications() {
   const [clearingAll, setClearingAll] = useState(false);
 
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    let mounted = true;
 
-  const fetchNotifications = async () => {
-    try {
-      const response = await fetch(`/api/notifications?page=${page}&limit=20`);
-      const data = await response.json();
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch(`/api/notifications?page=${page}&limit=20`);
+        const data = await response.json();
 
-      if (response.ok) {
-        if (page === 1) {
-          setNotifications(data.notifications);
-        } else {
-          setNotifications(prev => [...prev, ...data.notifications]);
+        if (response.ok && mounted) {
+          if (page === 1) {
+            setNotifications(data.notifications || []);
+          } else {
+            setNotifications(prev => [...prev, ...(data.notifications || [])]);
+          }
+          setHasMore(data.hasMore || false);
         }
-        setHasMore(data.hasMore);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchNotifications();
+
+    return () => {
+      mounted = false;
+    };
+  }, [page]);
 
   const handleScroll = () => {
     if (
@@ -63,7 +71,6 @@ export default function Notifications() {
     ) {
       if (hasMore && !loading) {
         setPage(prev => prev + 1);
-        fetchNotifications();
       }
     }
   };
@@ -106,15 +113,16 @@ export default function Notifications() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
-          {notifications.length > 0 && (
+    <div className="min-h-screen border-x border-neutral-100">
+      {/* Header */}
+      <div className="sticky top-0 z-10 backdrop-blur-sm bg-white/80 border-b border-neutral-100">
+        <div className="px-4 h-14 flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-neutral-900">Notifications</h1>
+          {notifications?.length > 0 && (
             <button
               onClick={clearAllNotifications}
               disabled={clearingAll}
-              className="flex items-center text-sm text-gray-600 hover:text-red-600"
+              className="flex items-center text-sm text-neutral-600 hover:text-red-600"
             >
               {clearingAll ? (
                 <AiOutlineLoading3Quarters className="animate-spin h-4 w-4 mr-1" />
@@ -127,54 +135,55 @@ export default function Notifications() {
         </div>
       </div>
 
+      {/* Content */}
       {loading && notifications.length === 0 ? (
         <div className="flex justify-center py-8">
-          <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-pink-600" />
+          <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-neutral-500" />
         </div>
-      ) : notifications.length === 0 ? (
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
-          <p className="text-gray-600">No notifications yet</p>
+      ) : notifications?.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-neutral-600">No notifications yet</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {notifications.map((notification) => (
+        <div className="divide-y divide-neutral-100">
+          {notifications?.map((notification) => (
             <div
               key={notification._id}
-              className={`bg-white p-4 rounded-lg shadow-sm border ${
-                notification.read ? 'border-gray-200' : 'border-pink-200 bg-pink-50'
+              className={`px-4 py-3 ${
+                !notification.read && 'bg-neutral-50'
               }`}
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-start space-x-3">
                 <Link href={`/profile/${notification.sender._id}`}>
                   <Image
                     src={notification.sender.image}
                     alt={notification.sender.name}
-                    width={40}
-                    height={40}
+                    width={36}
+                    height={36}
                     className="rounded-full"
                   />
                 </Link>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div>
                       <Link
                         href={`/profile/${notification.sender._id}`}
-                        className="font-medium text-gray-900 hover:text-pink-600"
+                        className="font-semibold text-sm text-neutral-900 hover:underline"
                       >
                         {notification.sender.name}
                       </Link>{' '}
-                      <span className="text-gray-600">
+                      <span className="text-sm text-neutral-600">
                         {getNotificationText(notification)}
                       </span>
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-xs text-neutral-500 whitespace-nowrap ml-2">
                       {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                     </span>
                   </div>
                   {notification.post && (
                     <Link
                       href={`/posts/${notification.post._id}`}
-                      className="mt-2 block text-sm text-gray-600 hover:text-gray-900"
+                      className="mt-1 block text-sm text-neutral-600 hover:text-neutral-900"
                     >
                       {notification.post.content.length > 100
                         ? `${notification.post.content.substring(0, 100)}...`
@@ -182,7 +191,7 @@ export default function Notifications() {
                     </Link>
                   )}
                   {notification.comment && (
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-neutral-600">
                       "{notification.comment}"
                     </p>
                   )}
@@ -192,12 +201,15 @@ export default function Notifications() {
           ))}
 
           {loading && (
-            <div className="flex justify-center py-4">
-              <AiOutlineLoading3Quarters className="w-6 h-6 animate-spin text-pink-600" />
+            <div className="flex justify-center py-8">
+              <AiOutlineLoading3Quarters className="w-6 h-6 animate-spin text-neutral-500" />
             </div>
           )}
         </div>
       )}
+
+      {/* Bottom Padding for Mobile Navigation */}
+      <div className="h-16 md:hidden" />
     </div>
   );
 }

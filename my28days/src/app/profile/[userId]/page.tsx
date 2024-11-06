@@ -81,44 +81,52 @@ export default function Profile({ params }: { params: { userId: string } }) {
   if (!user && !loading) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">User not found</p>
+        <p className="text-neutral-600">User not found</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl mx-auto">
       {user && (
         <>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="px-4 py-3 border-b border-neutral-100">
             <div className="flex items-start space-x-4">
-              <Image
-                src={user.image}
-                alt={user.name}
-                width={80}
-                height={80}
-                className="rounded-full"
-              />
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
+              {user.image ? (
+                <Image
+                  src={user.image}
+                  alt={user.name}
+                  width={80}
+                  height={80}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl text-neutral-500">
+                    {user.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
+                    <h1 className="text-xl font-semibold text-neutral-900">{user.name}</h1>
                     {user.bio && (
-                      <p className="mt-1 text-gray-600">{user.bio}</p>
+                      <p className="mt-1 text-neutral-600 text-sm">{user.bio}</p>
                     )}
                   </div>
                   {!isCurrentUser && (
                     <button
                       onClick={handleFollow}
                       disabled={followLoading}
-                      className={`px-4 py-2 rounded-md ${
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium ${
                         isFollowing
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          : 'bg-pink-600 text-white hover:bg-pink-700'
+                          ? 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200'
+                          : 'bg-neutral-900 text-white hover:bg-neutral-800'
                       }`}
                     >
                       {followLoading ? (
-                        <AiOutlineLoading3Quarters className="animate-spin h-5 w-5" />
+                        <AiOutlineLoading3Quarters className="animate-spin h-4 w-4" />
                       ) : (
                         isFollowing ? 'Following' : 'Follow'
                       )}
@@ -126,7 +134,7 @@ export default function Profile({ params }: { params: { userId: string } }) {
                   )}
                 </div>
 
-                <div className="mt-4 flex items-center space-x-4 text-sm text-gray-600">
+                <div className="mt-3 flex items-center space-x-4 text-sm text-neutral-600">
                   <span>{user.followers.length} followers</span>
                   <span>{user.following.length} following</span>
                   {user.medicalInfo?.diagnosisDate && (
@@ -141,24 +149,24 @@ export default function Profile({ params }: { params: { userId: string } }) {
               </div>
             </div>
 
-            <div className="mt-6 border-t border-gray-200 pt-6">
+            <div className="mt-4">
               <div className="flex space-x-8">
                 <button
                   onClick={() => setActiveTab('posts')}
-                  className={`pb-4 ${
+                  className={`pb-3 ${
                     activeTab === 'posts'
-                      ? 'border-b-2 border-pink-500 text-pink-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border-b-2 border-neutral-900 text-neutral-900 font-medium'
+                      : 'text-neutral-500 hover:text-neutral-900'
                   }`}
                 >
                   Posts
                 </button>
                 <button
                   onClick={() => setActiveTab('about')}
-                  className={`pb-4 ${
+                  className={`pb-3 ${
                     activeTab === 'about'
-                      ? 'border-b-2 border-pink-500 text-pink-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border-b-2 border-neutral-900 text-neutral-900 font-medium'
+                      : 'text-neutral-500 hover:text-neutral-900'
                   }`}
                 >
                   About
@@ -168,14 +176,14 @@ export default function Profile({ params }: { params: { userId: string } }) {
           </div>
 
           {activeTab === 'posts' ? (
-            <div className="space-y-4">
+            <div>
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-pink-600" />
+                  <AiOutlineLoading3Quarters className="w-6 h-6 animate-spin text-neutral-500" />
                 </div>
               ) : posts.length === 0 ? (
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
-                  <p className="text-gray-600">No posts yet</p>
+                <div className="text-center py-8">
+                  <p className="text-neutral-600">No posts yet</p>
                 </div>
               ) : (
                 posts.map((post) => (
@@ -188,36 +196,40 @@ export default function Profile({ params }: { params: { userId: string } }) {
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="p-4">
               {user.medicalInfo && (
                 <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Symptoms</h3>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {user.medicalInfo.symptoms.map((symptom) => (
-                        <span
-                          key={symptom}
-                          className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm"
-                        >
-                          {symptom}
-                        </span>
-                      ))}
+                  {user.medicalInfo.symptoms && user.medicalInfo.symptoms.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium text-neutral-900">Symptoms</h3>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {user.medicalInfo.symptoms.map((symptom) => (
+                          <span
+                            key={symptom}
+                            className="px-3 py-1 bg-neutral-100 text-neutral-900 rounded-full text-sm"
+                          >
+                            {symptom}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Treatments</h3>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {user.medicalInfo.treatments.map((treatment) => (
-                        <span
-                          key={treatment}
-                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-                        >
-                          {treatment}
-                        </span>
-                      ))}
+                  {user.medicalInfo.treatments && user.medicalInfo.treatments.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium text-neutral-900">Treatments</h3>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {user.medicalInfo.treatments.map((treatment) => (
+                          <span
+                            key={treatment}
+                            className="px-3 py-1 bg-neutral-100 text-neutral-900 rounded-full text-sm"
+                          >
+                            {treatment}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

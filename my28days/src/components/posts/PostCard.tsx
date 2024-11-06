@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -37,8 +37,8 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, currentUserId }: PostCardProps) {
-  const [isLiked, setIsLiked] = useState(post.likes.includes(currentUserId || ''));
-  const [likesCount, setLikesCount] = useState(post.likes.length);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,6 +46,11 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   const [page, setPage] = useState(1);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setIsLiked(post.likes.includes(currentUserId || ''));
+    setLikesCount(post.likes.length);
+  }, [post.likes, currentUserId]);
 
   const handleLike = async () => {
     if (!currentUserId) return;
@@ -100,8 +105,33 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
 
   const handleLoadMoreComments = () => {
     setPage(prev => prev + 1);
-    fetchComments();
   };
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (page > 1 && showComments) {
+      const loadMoreComments = async () => {
+        try {
+          const response = await fetch(`/api/posts/${post._id}/comments?page=${page}&limit=5`);
+          const data = await response.json();
+
+          if (response.ok && mounted) {
+            setComments(prev => [...prev, ...data.comments]);
+            setHasMore(data.hasMore);
+          }
+        } catch (error) {
+          console.error('Error loading more comments:', error);
+        }
+      };
+
+      loadMoreComments();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [page, post._id, showComments]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +151,6 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
         const comment = await response.json();
         setComments(prev => [comment, ...prev]);
         setNewComment('');
-        // Reset page and hasMore to ensure proper pagination after new comment
         setPage(1);
         setHasMore(true);
       }
@@ -133,45 +162,46 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+    <div className="py-3 border-b border-neutral-100">
       <div className="flex items-start space-x-3">
         <Link href={`/profile/${post.author._id}`}>
           {post.isAnonymous ? (
-            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-              <span className="text-gray-500">A</span>
+            <div className="w-9 h-9 bg-neutral-100 rounded-full flex items-center justify-center">
+              <span className="text-neutral-500">A</span>
             </div>
           ) : (
             <Image
               src={post.author.image}
               alt={post.author.name}
-              width={40}
-              height={40}
+              width={36}
+              height={36}
               className="rounded-full"
             />
           )}
         </Link>
 
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-1">
             <Link href={`/profile/${post.author._id}`}>
-              <span className="font-medium text-gray-900">
+              <span className="font-semibold text-sm text-neutral-900 hover:underline">
                 {post.isAnonymous ? 'Anonymous' : post.author.name}
               </span>
             </Link>
-            <span className="text-sm text-gray-500">
+            <span className="text-xs text-neutral-500">·</span>
+            <span className="text-xs text-neutral-500">
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </span>
           </div>
 
-          <div className="mt-2">
-            <span className="inline-block px-2 py-1 text-xs font-medium text-pink-600 bg-pink-50 rounded-full mb-2">
+          <div className="mt-1">
+            <span className="text-xs text-neutral-500">
               {post.category}
             </span>
-            <p className="text-gray-900">{post.content}</p>
+            <p className="text-[15px] text-neutral-900 whitespace-pre-wrap">{post.content}</p>
           </div>
 
           {post.images && post.images.length > 0 && (
-            <div className="mt-3 grid gap-2 grid-cols-2">
+            <div className="mt-2 grid gap-0.5 grid-cols-2">
               {post.images.map((image, index) => (
                 <Image
                   key={index}
@@ -179,81 +209,82 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                   alt={`Post image ${index + 1}`}
                   width={300}
                   height={300}
-                  className="rounded-lg object-cover w-full h-48"
+                  className="rounded object-cover w-full h-48"
                 />
               ))}
             </div>
           )}
 
-          <div className="mt-4 flex items-center space-x-4">
+          <div className="mt-2 flex items-center space-x-4">
             <button
               onClick={handleLike}
-              className="flex items-center space-x-1 text-gray-500 hover:text-pink-600"
+              className="flex items-center space-x-1 text-neutral-500 hover:text-neutral-900"
             >
               {isLiked ? (
-                <AiFillHeart className="w-5 h-5 text-pink-600" />
+                <AiFillHeart className="w-4 h-4 text-red-500" />
               ) : (
-                <AiOutlineHeart className="w-5 h-5" />
+                <AiOutlineHeart className="w-4 h-4" />
               )}
-              <span>{likesCount}</span>
+              <span className="text-xs">{likesCount}</span>
             </button>
 
             <button
               onClick={handleShowComments}
-              className="flex items-center space-x-1 text-gray-500 hover:text-pink-600"
+              className="flex items-center space-x-1 text-neutral-500 hover:text-neutral-900"
             >
-              <AiOutlineMessage className="w-5 h-5" />
-              <span>{comments.length || post.comments.length}</span>
+              <AiOutlineMessage className="w-4 h-4" />
+              <span className="text-xs">{comments.length || post.comments.length}</span>
             </button>
           </div>
 
           {showComments && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-3 space-y-3">
               <form onSubmit={handleSubmitComment} className="flex space-x-2">
                 <input
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-pink-500"
+                  className="flex-1 px-3 py-1.5 text-sm bg-neutral-100 rounded-full focus:outline-none focus:ring-1 focus:ring-neutral-400"
                 />
                 <button
                   type="submit"
                   disabled={submitting || !newComment.trim()}
-                  className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-50"
+                  className="px-4 py-1.5 text-sm bg-neutral-900 text-white rounded-full hover:bg-neutral-800 disabled:opacity-50 disabled:hover:bg-neutral-900"
                 >
                   {submitting ? (
-                    <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+                    <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
                   ) : (
-                    'Post'
+                    'Reply'
                   )}
                 </button>
               </form>
 
               <div className="space-y-3">
                 {comments.map((comment) => (
-                  <div key={comment._id} className="flex items-start space-x-3 bg-gray-50 p-3 rounded-lg">
+                  <div key={comment._id} className="flex items-start space-x-2">
                     <Link href={`/profile/${comment.user._id}`}>
                       <Image
                         src={comment.user.image}
                         alt={comment.user.name}
-                        width={32}
-                        height={32}
+                        width={24}
+                        height={24}
                         className="rounded-full"
                       />
                     </Link>
-                    <div>
-                      <div className="flex items-center space-x-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-1">
                         <Link href={`/profile/${comment.user._id}`}>
-                          <span className="font-medium text-gray-900">
+                          <span className="text-sm font-semibold text-neutral-900 hover:underline">
                             {comment.user.name}
                           </span>
                         </Link>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs text-neutral-500">·</span>
+                        <span className="text-xs text-neutral-500">
                           {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                         </span>
                       </div>
-                      <p className="text-gray-700 mt-1">{comment.content}</p>
+                      <p className="text-sm text-neutral-900 mt-0.5">{comment.content}</p>
                     </div>
                   </div>
                 ))}
@@ -262,12 +293,12 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                   <button
                     onClick={handleLoadMoreComments}
                     disabled={loading}
-                    className="w-full py-2 text-sm text-gray-600 hover:text-gray-900"
+                    className="w-full py-2 text-xs text-neutral-500 hover:text-neutral-900"
                   >
                     {loading ? (
-                      <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin mx-auto" />
+                      <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin mx-auto" />
                     ) : (
-                      'Load more comments'
+                      'Show more replies'
                     )}
                   </button>
                 )}

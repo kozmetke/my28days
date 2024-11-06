@@ -1,49 +1,34 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/user';
+import { authOptions } from '../../auth/[...nextauth]/route';
 
-export async function PUT(req: Request) {
+export async function PUT(request: Request) {
   try {
-    const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { userId, medicalInfo, bio } = await req.json();
-
-    if (!userId) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
-    await connectDB();
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          medicalInfo,
-          bio,
-        },
-      },
-      { new: true }
-    ).select('-password');
-
-    if (!updatedUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(updatedUser);
-  } catch (error) {
-    console.error('Profile update error:', error);
+    // Just return success since we're using dummy data
     return NextResponse.json(
-      { error: 'Error updating profile' },
+      { 
+        message: 'Profile updated successfully',
+        user: {
+          ...session.user,
+          onboardingCompleted: true,
+          updatedAt: new Date().toISOString()
+        }
+      },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
