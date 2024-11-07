@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function PUT(request: Request) {
   try {
@@ -12,7 +12,24 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Just return success since we're using dummy data
+    // Update the session with onboarding completed
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          onboardingCompleted: true
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update session');
+    }
+
+    // Return the updated user data
     return NextResponse.json(
       { 
         message: 'Profile updated successfully',

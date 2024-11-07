@@ -23,14 +23,24 @@ export const authOptions: AuthOptions = {
           }
 
           // For demo purposes, accept any password for the demo users
-          if (user.email === "sarah@example.com" || 
-              user.email === "emily@example.com" || 
+          if (user.email === "sarah@example.com") {
+            return {
+              id: user._id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+              onboardingCompleted: true // Set to true for Sarah
+            };
+          }
+          
+          if (user.email === "emily@example.com" || 
               user.email === "maria@example.com") {
             return {
               id: user._id,
               name: user.name,
               email: user.email,
-              image: user.image
+              image: user.image,
+              onboardingCompleted: false
             };
           }
 
@@ -50,23 +60,38 @@ export const authOptions: AuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
+        token.onboardingCompleted = user.onboardingCompleted;
       }
+
+      // Handle onboarding completion update
+      if (trigger === "update" && session?.data?.onboardingCompleted !== undefined) {
+        token.onboardingCompleted = Boolean(session.data.onboardingCompleted);
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-        session.user.image = token.picture as string;
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture;
+        session.user.onboardingCompleted = token.onboardingCompleted;
       }
       return session;
+    }
+  },
+  events: {
+    async signIn({ user }) {
+      if (user && typeof user.onboardingCompleted === 'undefined') {
+        user.onboardingCompleted = false;
+      }
     }
   },
   secret: process.env.NEXTAUTH_SECRET,

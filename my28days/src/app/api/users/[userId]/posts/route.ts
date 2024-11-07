@@ -5,7 +5,7 @@ import { db } from '@/lib/data';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: { userId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,6 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { params } = context;
     const posts = db.getPostsByUserId(params.userId);
     
     return NextResponse.json({ posts });

@@ -8,7 +8,7 @@ import { AiOutlineGoogle, AiOutlineMail } from 'react-icons/ai';
 import OnboardingQuestions from '@/components/onboarding/OnboardingQuestions';
 
 export default function SignIn() {
-  const [showQuestions, setShowQuestions] = useState(true);
+  const [showQuestions, setShowQuestions] = useState(false); // Changed to false to show sign-in form directly
   const [result, setResult] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

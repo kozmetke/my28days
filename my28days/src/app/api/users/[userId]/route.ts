@@ -4,9 +4,10 @@ import { db } from "@/lib/data";
 
 export async function GET(
   req: Request,
-  { params }: { params: { userId: string } }
+  context: { params: { userId: string } }
 ) {
   try {
+    const { params } = context;
     const user = db.getUserById(params.userId);
     
     if (!user) {
@@ -29,9 +30,10 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { userId: string } }
+  context: { params: { userId: string } }
 ) {
   try {
+    const { params } = context;
     const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json(
