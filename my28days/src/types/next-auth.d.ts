@@ -8,6 +8,7 @@ declare module 'next-auth' {
       email?: string | null;
       image?: string | null;
       onboardingCompleted: boolean;
+      role: 'patient' | 'doctor' | 'admin';
     };
   }
 
@@ -17,6 +18,7 @@ declare module 'next-auth' {
     email?: string | null;
     image?: string | null;
     onboardingCompleted: boolean;
+    role: 'patient' | 'doctor' | 'admin';
   }
 
   interface JWT {
@@ -25,6 +27,7 @@ declare module 'next-auth' {
     email?: string | null;
     picture?: string | null;
     onboardingCompleted: boolean;
+    role: 'patient' | 'doctor' | 'admin';
   }
 }
 
@@ -35,5 +38,6 @@ declare module 'next-auth/jwt' {
     email?: string | null;
     picture?: string | null;
     onboardingCompleted: boolean;
+    role: 'patient' | 'doctor' | 'admin';
   }
 }

@@ -29,18 +29,30 @@ export const authOptions: AuthOptions = {
               name: user.name,
               email: user.email,
               image: user.image,
-              onboardingCompleted: true // Set to true for Sarah
+              onboardingCompleted: true,
+              role: 'admin' // Set Sarah as admin
             };
           }
           
-          if (user.email === "emily@example.com" || 
-              user.email === "maria@example.com") {
+          if (user.email === "emily@example.com") {
             return {
               id: user._id,
               name: user.name,
               email: user.email,
               image: user.image,
-              onboardingCompleted: false
+              onboardingCompleted: false,
+              role: 'doctor' // Set Emily as doctor
+            };
+          }
+
+          if (user.email === "maria@example.com") {
+            return {
+              id: user._id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+              onboardingCompleted: false,
+              role: 'patient' // Set Maria as patient
             };
           }
 
@@ -67,6 +79,7 @@ export const authOptions: AuthOptions = {
         token.email = user.email;
         token.picture = user.image;
         token.onboardingCompleted = user.onboardingCompleted;
+        token.role = user.role; // Include role in token
       }
 
       // Handle onboarding completion update
@@ -83,6 +96,7 @@ export const authOptions: AuthOptions = {
         session.user.email = token.email;
         session.user.image = token.picture;
         session.user.onboardingCompleted = token.onboardingCompleted;
+        session.user.role = token.role; // Include role in session
       }
       return session;
     }
@@ -91,6 +105,9 @@ export const authOptions: AuthOptions = {
     async signIn({ user }) {
       if (user && typeof user.onboardingCompleted === 'undefined') {
         user.onboardingCompleted = false;
+      }
+      if (user && typeof user.role === 'undefined') {
+        user.role = 'patient'; // Default role is patient
       }
     }
   },

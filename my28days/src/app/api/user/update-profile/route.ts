@@ -12,22 +12,8 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Update the session with onboarding completed
-    const response = await fetch('/api/auth/session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: {
-          onboardingCompleted: true
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update session');
-    }
+    // Get the request body
+    const body = await request.json();
 
     // Return the updated user data
     return NextResponse.json(
@@ -35,6 +21,7 @@ export async function PUT(request: Request) {
         message: 'Profile updated successfully',
         user: {
           ...session.user,
+          ...body,
           onboardingCompleted: true,
           updatedAt: new Date().toISOString()
         }

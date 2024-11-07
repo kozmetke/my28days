@@ -10,10 +10,6 @@ const users: User[] = [
     bio: 'Navigating menopause with positivity and strength',
     followers: ['2', '3'],
     following: ['2'],
-    flowWallet: {
-      address: '0x1234567890abcdef',
-      publicKey: 'abc123def456'
-    },
     medicalInfo: {
       lastPeriod: '2023-01-15',
       diagnosisDate: '2023-01-01',
@@ -32,10 +28,6 @@ const users: User[] = [
     bio: 'Supporting women through their journey',
     followers: ['1'],
     following: ['1', '3'],
-    flowWallet: {
-      address: '0xabcdef1234567890',
-      publicKey: 'def456abc789'
-    },
     medicalInfo: {
       lastPeriod: '2023-02-01',
       diagnosisDate: '2023-01-15',
@@ -54,10 +46,6 @@ const users: User[] = [
     bio: 'Sharing experiences and wisdom',
     followers: ['2'],
     following: ['1'],
-    flowWallet: {
-      address: '0x9876543210fedcba',
-      publicKey: 'ghi789jkl012'
-    },
     medicalInfo: {
       lastPeriod: '2023-01-20',
       diagnosisDate: '2023-01-10',
@@ -127,6 +115,20 @@ const notifications: Notification[] = [
   },
 ];
 
+// Function to update user's Flow wallet
+export const updateUserWallet = (userId: string, wallet: { address: string; publicKey: string; privateKey: string }) => {
+  const userIndex = users.findIndex(user => user._id === userId);
+  if (userIndex !== -1) {
+    users[userIndex].flowWallet = {
+      address: wallet.address,
+      publicKey: wallet.publicKey
+    };
+    console.log(`Updated wallet for user ${users[userIndex].email}`);
+    return true;
+  }
+  return false;
+};
+
 export const db = {
   getUserByEmail: (email: string) => {
     return users.find(user => user.email === email);
@@ -162,4 +164,5 @@ export const db = {
       post.content.toLowerCase().includes(lowercaseQuery)
     );
   },
+  updateUserWallet,
 };

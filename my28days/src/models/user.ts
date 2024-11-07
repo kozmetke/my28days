@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ['patient', 'doctor', 'admin'],
+    default: 'patient',
+  },
   image: {
     type: String,
     default: 'https://res.cloudinary.com/demo/image/upload/v1/samples/people/placeholder-avatar.jpg',
