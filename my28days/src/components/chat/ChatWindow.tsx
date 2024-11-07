@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import { AiOutlineMessage, AiOutlineSend, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
+import { AiOutlineSend, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
 
 export default function ChatWindow() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,36 +12,36 @@ export default function ChatWindow() {
     <>
       {/* Desktop Version */}
       <div className="hidden md:flex flex-col h-full">
-        <div className="flex-1 bg-neutral-50 rounded-t-xl p-4">
-          <div className="flex items-center space-x-3 mb-4">
-            <Image
-              src="/woman-avatar.svg"
-              alt="AI Assistant"
-              width={40}
-              height={40}
-              className="rounded-full bg-white"
-            />
-            <div>
-              <h3 className="font-semibold text-neutral-900">AI Assistant</h3>
-              <p className="text-xs text-neutral-500">Here to support you</p>
+        <div 
+          className="flex-1 bg-neutral-50 rounded-t-xl relative overflow-hidden"
+          style={{
+            backgroundImage: 'url(/poi-knowledge-base-avatar.svg)',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'contain'
+          }}
+        >
+          {/* Semi-transparent overlay for better text readability */}
+          <div className="absolute inset-0 bg-white/80"></div>
+          
+          {/* Chat content */}
+          <div className="relative h-full flex flex-col">
+            <div className="p-4">
+              <div>
+                <h3 className="font-semibold text-neutral-900">POI Knowledge Base Assistant</h3>
+                <p className="text-xs text-neutral-500">Here to support you</p>
+              </div>
             </div>
-          </div>
 
-          <div className="h-[calc(100%-60px)] overflow-y-auto">
-            <div className="space-y-4">
-              <div className="flex items-start space-x-2.5">
-                <Image
-                  src="/woman-avatar.svg"
-                  alt="AI Assistant"
-                  width={32}
-                  height={32}
-                  className="rounded-full bg-white"
-                />
-                <div className="flex-1">
-                  <div className="inline-block bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm">
-                    <p className="text-sm text-neutral-900">
-                      Hi! I'm your personal AI assistant. I'm here to support you on your journey through menopause. How can I help you today?
-                    </p>
+            <div className="flex-1 p-4 overflow-y-auto flex flex-col-reverse">
+              <div className="space-y-4">
+                <div className="flex items-start justify-end space-x-2.5">
+                  <div className="max-w-[80%]">
+                    <div className="inline-block bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-sm">
+                      <p className="text-sm text-neutral-900">
+                        Hi! I'm your personal POI knowledge base assistant. I'm here to support you on your journey through menopause. How can I help you today?
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -50,7 +49,7 @@ export default function ChatWindow() {
           </div>
         </div>
 
-        <div className="bg-white border-t border-neutral-100 p-3 rounded-b-xl">
+        <div className="bg-white/95 backdrop-blur-sm border-t border-neutral-100 p-3 rounded-b-xl">
           <form 
             onSubmit={(e) => {
               e.preventDefault();
@@ -86,14 +85,7 @@ export default function ChatWindow() {
           className="flex items-center justify-between w-full px-4 py-3 text-neutral-900"
         >
           <div className="flex items-center space-x-3">
-            <Image
-              src="/woman-avatar.svg"
-              alt="AI Assistant"
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
-            <span className="font-medium">AI Assistant</span>
+            <span className="font-medium">POI Knowledge Base Assistant</span>
           </div>
           {isMobileCollapsed ? (
             <AiOutlineDown className="w-5 h-5 text-neutral-500" />
@@ -104,28 +96,37 @@ export default function ChatWindow() {
 
         {!isMobileCollapsed && (
           <div className="border-t border-neutral-100">
-            <div className="h-64 overflow-y-auto p-4 bg-neutral-50">
-              <div className="space-y-4">
-                <div className="flex items-start space-x-2.5">
-                  <Image
-                    src="/woman-avatar.svg"
-                    alt="AI Assistant"
-                    width={32}
-                    height={32}
-                    className="rounded-full bg-white"
-                  />
-                  <div className="flex-1">
-                    <div className="inline-block bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm">
-                      <p className="text-sm text-neutral-900">
-                        Hi! I'm your personal AI assistant. I'm here to support you on your journey through menopause. How can I help you today?
-                      </p>
+            <div 
+              className="h-64 relative"
+              style={{
+                backgroundImage: 'url(/poi-knowledge-base-avatar.svg)',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: 'contain'
+              }}
+            >
+              {/* Semi-transparent overlay */}
+              <div className="absolute inset-0 bg-white/80"></div>
+              
+              {/* Chat content */}
+              <div className="relative h-full overflow-y-auto p-4">
+                <div className="flex flex-col-reverse">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-end space-x-2.5">
+                      <div className="max-w-[80%]">
+                        <div className="inline-block bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-sm">
+                          <p className="text-sm text-neutral-900">
+                            Hi! I'm your personal POI knowledge base assistant. I'm here to support you on your journey through menopause. How can I help you today?
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-3 bg-white border-t border-neutral-100">
+            <div className="p-3 bg-white/95 backdrop-blur-sm border-t border-neutral-100">
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();

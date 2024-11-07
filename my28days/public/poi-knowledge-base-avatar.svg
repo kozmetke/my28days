@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="600" viewBox="0 0 200 600" xmlns="http://www.w3.org/2000/svg">
+    <!-- Hair -->
+    <path d="M60 120 
+             C60 80 140 80 140 120 
+             C140 150 120 160 100 165 
+             C80 160 60 150 60 120 
+             Z" 
+          fill="#2B2B2B"/>
+    
+    <!-- Face -->
+    <path d="M75 110 
+             C75 85 125 85 125 110 
+             C125 135 115 150 100 150 
+             C85 150 75 135 75 110 
+             Z" 
+          fill="#FFE4D6"/>
+    
+    <!-- Eyes -->
+    <ellipse cx="85" cy="105" rx="3" ry="4" fill="#2B2B2B"/>
+    <ellipse cx="115" cy="105" rx="3" ry="4" fill="#2B2B2B"/>
+    
+    <!-- Smile -->
+    <path d="M90 120 
+             C95 125 105 125 110 120" 
+          fill="none" 
+          stroke="#2B2B2B" 
+          stroke-width="2" 
+          stroke-linecap="round"/>
+    
+    <!-- Neck -->
+    <path d="M90 150 
+             L110 150 
+             L115 180 
+             L85 180 
+             Z" 
+          fill="#FFE4D6"/>
+    
+    <!-- Dress -->
+    <path d="M85 180 
+             C40 220 50 400 60 580 
+             L140 580 
+             C150 400 160 220 115 180 
+             Z" 
+          fill="#4A90E2">
+        <!-- Dress Pattern -->
+        <animate attributeName="fill" 
+                 values="#4A90E2;#5A9FF2;#4A90E2" 
+                 dur="3s" 
+                 repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Dress Details -->
+    <path d="M85 180 
+             C85 280 115 280 115 180" 
+          fill="none" 
+          stroke="#3A80D2" 
+          stroke-width="2"/>
+    
+    <!-- Arms -->
+    <path d="M85 180 
+             C60 220 50 280 45 350" 
+          fill="none" 
+          stroke="#4A90E2" 
+          stroke-width="25" 
+          stroke-linecap="round"/>
+    <path d="M115 180 
+             C140 220 150 280 155 350" 
+          fill="none" 
+          stroke="#4A90E2" 
+          stroke-width="25" 
+          stroke-linecap="round"/>
+    
+    <!-- Shoulders -->
+    <path d="M60 190 
+             C80 185 120 185 140 190" 
+          fill="none" 
+          stroke="#3A80D2" 
+          stroke-width="3"/>
+    
+    <!-- Hair Details -->
+    <path d="M65 100 
+             C75 80 125 80 135 100" 
+          fill="none" 
+          stroke="#1B1B1B" 
+          stroke-width="2"/>
+</svg>

@@ -1,8 +1,9 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import Navbar from '@/components/navigation/Navbar';
-import ChatWindow from '@/components/chat/ChatWindow';
+import Image from 'next/image';
+import Navbar from '../navigation/Navbar';
+import ChatWindow from '../chat/ChatWindow';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
@@ -15,7 +16,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <div className="hidden md:flex md:w-[275px] lg:w-[350px] fixed left-0 top-0 h-full border-r border-neutral-100">
           <div className="flex flex-col p-4 w-full">
             <div className="py-4">
-              <img src="/logo.png" alt="My28Days" className="h-8 w-auto" />
+              <Image
+                src="/logo.png"
+                alt="My28Days"
+                width={120}
+                height={32}
+                className="h-8 w-auto"
+                priority
+              />
             </div>
             <Navbar />
           </div>

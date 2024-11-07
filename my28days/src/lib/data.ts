@@ -1,4 +1,50 @@
-import type { User, Post, Comment, Author, Notification } from '@/types';
+import type { User, Post, Comment, Author, Notification, ValidationConversation } from '@/types';
+
+// Validation conversations data
+const validationConversations: ValidationConversation[] = [
+  {
+    _id: '1',
+    subject: 'Menopause Symptoms Discussion',
+    starScore: 4.5,
+    summary: 'Discussion about managing hot flashes and night sweats with lifestyle changes and potential treatments.',
+    fullConversation: [
+      { role: 'patient', message: "I've been experiencing severe hot flashes, especially at night. What can I do?" },
+      { role: 'doctor', message: "Hot flashes can be challenging. Let's discuss some lifestyle modifications first. Are you keeping track of your triggers?" },
+      { role: 'patient', message: "I notice they're worse after drinking coffee or wine." },
+      { role: 'doctor', message: "That's good observation. Caffeine and alcohol are common triggers. I recommend reducing intake and trying these specific techniques..." }
+    ],
+    status: 'pending',
+    createdAt: new Date('2024-01-15').toISOString()
+  },
+  {
+    _id: '2',
+    subject: 'Sleep Issues Consultation',
+    starScore: 5.0,
+    summary: 'Consultation regarding insomnia and sleep disruption, discussing both behavioral and medical interventions.',
+    fullConversation: [
+      { role: 'patient', message: "I haven't had a good night's sleep in weeks. Is this normal during menopause?" },
+      { role: 'doctor', message: "Sleep disruption is common during menopause. Can you tell me more about your sleep routine?" },
+      { role: 'patient', message: "I try to go to bed at 10pm but keep waking up throughout the night." },
+      { role: 'doctor', message: "Let's work on your sleep hygiene. Here are some evidence-based strategies..." }
+    ],
+    status: 'pending',
+    createdAt: new Date('2024-01-16').toISOString()
+  },
+  {
+    _id: '3',
+    subject: 'Mood Changes Discussion',
+    starScore: 4.8,
+    summary: 'Detailed discussion about emotional well-being and strategies for managing mood changes during menopause.',
+    fullConversation: [
+      { role: 'patient', message: "I've been feeling more anxious and irritable lately. Is this related to menopause?" },
+      { role: 'doctor', message: "Yes, mood changes are common during menopause. Are you noticing any specific patterns?" },
+      { role: 'patient', message: "It seems worse in the mornings and during stressful situations at work." },
+      { role: 'doctor', message: "Thank you for sharing. Let's explore some coping strategies and potential support options..." }
+    ],
+    status: 'pending',
+    createdAt: new Date('2024-01-17').toISOString()
+  }
+];
 
 // Static data for demo purposes
 const users: User[] = [
@@ -8,8 +54,13 @@ const users: User[] = [
     email: 'sarah@example.com',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
     bio: 'Navigating menopause with positivity and strength',
+    role: 'admin',
     followers: ['2', '3'],
     following: ['2'],
+    flowWallet: {
+      address: '0x01cf0e2f2f715450',
+      publicKey: '5a5b3e159b2ae22f3e64226f09c830b5440e85b9fb8332010b8c43a7c71c5c756f3f1dcc7af8f0d477c4c8c0b2f2c0c5f08c5c5c5c5c5c5c5c5c5c5c5c5c5c'
+    },
     medicalInfo: {
       lastPeriod: '2023-01-15',
       diagnosisDate: '2023-01-01',
@@ -26,8 +77,13 @@ const users: User[] = [
     email: 'emily@example.com',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
     bio: 'Supporting women through their journey',
+    role: 'doctor',
     followers: ['1'],
     following: ['1', '3'],
+    flowWallet: {
+      address: '0x179b6b1cb6755e31',
+      publicKey: '3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b'
+    },
     medicalInfo: {
       lastPeriod: '2023-02-01',
       diagnosisDate: '2023-01-15',
@@ -44,8 +100,13 @@ const users: User[] = [
     email: 'maria@example.com',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
     bio: 'Sharing experiences and wisdom',
+    role: 'patient',
     followers: ['2'],
     following: ['1'],
+    flowWallet: {
+      address: '0x3c3c3c3c3c3c3c3c',
+      publicKey: '5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e'
+    },
     medicalInfo: {
       lastPeriod: '2023-01-20',
       diagnosisDate: '2023-01-10',
@@ -150,6 +211,17 @@ export const db = {
   },
   getNotifications: (userId: string) => {
     return notifications.filter(notification => notification.userId === userId);
+  },
+  getValidationConversations: () => {
+    return validationConversations;
+  },
+  updateValidationStatus: (id: string, status: 'validated' | 'invalidated' | 'dismissed') => {
+    const conversation = validationConversations.find(conv => conv._id === id);
+    if (conversation) {
+      conversation.status = status;
+      return true;
+    }
+    return false;
   },
   searchUsers: (query: string) => {
     const lowercaseQuery = query.toLowerCase();
