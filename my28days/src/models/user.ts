@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    default: 'https://res.cloudinary.com/demo/image/upload/v1/samples/people/placeholder-avatar.jpg',
+    default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
   },
   bio: {
     type: String,
@@ -64,6 +64,14 @@ const userSchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+});
+
+// Pre-save middleware to set the avatar based on the user's name
+userSchema.pre('save', function(next) {
+  if (this.name && (!this.image || this.image === 'https://api.dicebear.com/7.x/avataaars/svg?seed=default')) {
+    this.image = `https://api.dicebear.com/7.x/avataaars/svg?seed=${this.name}`;
+  }
+  next();
 });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);

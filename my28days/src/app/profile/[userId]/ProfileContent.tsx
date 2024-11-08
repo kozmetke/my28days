@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { db } from '@/lib/data';
 import ValidationContent from '@/components/validation/ValidationContent';
 
@@ -33,11 +34,16 @@ export default function ProfileContent({ userId }: ProfileContentProps) {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-4">
-            <img
-              src={user.image || 'https://via.placeholder.com/150'}
-              alt={user.name}
-              className="w-24 h-24 rounded-full"
-            />
+            <div className="relative w-24 h-24">
+              <Image
+                src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                alt={user.name}
+                className="rounded-full"
+                fill
+                sizes="(max-width: 96px) 96px"
+                priority
+              />
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
               <p className="text-gray-600">{user.bio}</p>
@@ -89,6 +95,14 @@ export default function ProfileContent({ userId }: ProfileContentProps) {
                   <h3 className="text-lg font-medium">Bio</h3>
                   <p className="text-gray-600">{user.bio}</p>
                 </div>
+                {user.flowWallet?.address && (
+                  <div>
+                    <h3 className="text-lg font-medium">Flow ID</h3>
+                    <p className="text-gray-600 font-mono bg-gray-50 p-2 rounded mt-1 break-all">
+                      {user.flowWallet.address}
+                    </p>
+                  </div>
+                )}
                 {user.medicalInfo && (
                   <>
                     <div>
